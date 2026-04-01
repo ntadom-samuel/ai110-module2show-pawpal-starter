@@ -11,8 +11,7 @@ User
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+- Creating a class of Owner and not user, because the only user that makes changes in the app is the pet owner
 
 ---
 
