@@ -3,9 +3,11 @@
 ## 1. System Design
 
 **a. Initial design**
+User
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+- Enter personal information
+- Enter type of pet
+- Choose task, time, and duration
 
 **b. Design changes**
 
