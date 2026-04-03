@@ -9,16 +9,16 @@ from abc import ABC, abstractmethod
 
 
 class Owner:
-    """Represents a pet owner with preferences and time constraints."""
+    """Represents a pet owner with pets and time availability."""
     
     def __init__(self, name: str, available_hours: int):
         self.name = name
         self.available_hours = available_hours
-        self.preferences = []
+        self.pets = []
     
-    def add_constraint(self, constraint):
-        """Add a constraint to the owner's preferences."""
-        self.preferences.append(constraint)
+    def add_pet(self, pet):
+        """Add a pet to the owner's care."""
+        self.pets.append(pet)
     
     def get_available_time(self) -> int:
         """Return available time in minutes."""
@@ -34,10 +34,15 @@ class Pet:
         self.age = age
         self.special_needs = []
         self.personality_traits = []
+        self.tasks = []
     
-    def get_care_requirements(self) -> List[str]:
-        """Return list of care requirements based on species and special needs."""
-        pass
+    def add_task(self, task: 'Task') -> None:
+        """Add a task to the pet's care plan."""
+        self.tasks.append(task)
+    
+    def get_tasks(self) -> List['Task']:
+        """Return the list of tasks for this pet."""
+        return self.tasks
 
 
 class Task:
@@ -57,6 +62,12 @@ class Task:
         self.category = category  # walk, feed, med, groom, enrichment, etc.
         self.required_frequency = required_frequency
         self.owner_preference = True
+        self.status = "incomplete"
+    
+    def mark_complete(self) -> bool:
+        """Mark the task as complete. Returns True if successful."""
+        self.status = "complete"
+        return True
     
     def is_urgent(self) -> bool:
         """Check if task is urgent (high priority)."""
@@ -100,70 +111,22 @@ class DailySchedule:
     
     def export_plan(self) -> str:
         """Export the plan as a formatted string."""
-        pass
+        output = f"🐾 Today's Schedule for {self.pet.name} ({self.date})\n"
+        output += f"Owner: {self.owner.name}\n"
+        output += f"Available Time: {self.owner.get_available_time()} minutes\n"
+        output += "\nTasks:\n"
+        
+        for idx, task in enumerate(self.tasks, 1):
+            output += f"{idx}. {task.name} ({task.duration_minutes} min, Priority: {task.priority})\n"
+        
+        remaining_time = self.owner.get_available_time() - self.total_duration
+        output += f"\nTotal Time: {self.total_duration} minutes\n"
+        output += f"Remaining Time: {remaining_time} minutes\n"
+        
+        return output
 
 
-class Constraint(ABC):
-    """Abstract base class for scheduling constraints."""
-    
-    @abstractmethod
-    def validate(self, schedule: DailySchedule) -> bool:
-        """Validate if the schedule meets this constraint."""
-        pass
 
-
-class TimeConstraint(Constraint):
-    """Constraint that limits total task duration."""
-    
-    def __init__(self, max_minutes: int):
-        self.max_minutes = max_minutes
-    
-    def validate(self, schedule: DailySchedule) -> bool:
-        """Check if schedule fits within time limit."""
-        return schedule.total_duration <= self.max_minutes
-
-
-class PriorityConstraint(Constraint):
-    """Constraint that ensures minimum priority tasks are included."""
-    
-    def __init__(self, min_priority: int):
-        self.min_priority = min_priority
-    
-    def validate(self, schedule: DailySchedule) -> bool:
-        """Check if all high-priority tasks are included."""
-        pass
-
-
-class PreferenceConstraint(Constraint):
-    """Constraint based on owner preferences."""
-    
-    def __init__(self, preferences: Dict):
-        self.preferences = preferences
-    
-    def validate(self, schedule: DailySchedule) -> bool:
-        """Check if schedule respects owner preferences."""
-        pass
-
-
-class PlanExplanation:
-    """Provides explanations for scheduling decisions."""
-    
-    def __init__(self, plan: DailySchedule):
-        self.plan = plan
-        self.decisions = []
-        self.rationale = ""
-    
-    def explain_why_task_included(self, task: Task) -> str:
-        """Explain why a specific task was included in the plan."""
-        pass
-    
-    def explain_task_order(self) -> str:
-        """Explain the ordering of tasks in the schedule."""
-        pass
-    
-    def explain_tradeoffs(self) -> str:
-        """Explain any tradeoffs made in the schedule."""
-        pass
 
 
 class Scheduler:
@@ -172,9 +135,7 @@ class Scheduler:
     def __init__(self, owner: Owner, pet: Pet, time_limit: int):
         self.owner = owner
         self.pet = pet
-        self.available_tasks = []
         self.time_limit = time_limit  # in minutes
-        self.constraints = []
     
     def generate_daily_plan(self, schedule_date: date = None) -> DailySchedule:
         """Generate an optimized daily schedule."""
@@ -182,17 +143,10 @@ class Scheduler:
             schedule_date = date.today()
         
         schedule = DailySchedule(schedule_date, self.owner, self.pet)
-        # TODO: Implement scheduling logic
+        
+        # Add tasks to schedule if they fit within time limit
+        for task in self.pet.get_tasks():
+            if schedule.total_duration + task.duration_minutes <= self.time_limit:
+                schedule.add_task(task)
+        
         return schedule
-    
-    def prioritize_tasks(self) -> List[Task]:
-        """Sort tasks by priority and importance."""
-        pass
-    
-    def allocate_time(self, tasks: List[Task]) -> List[Task]:
-        """Allocate available time to tasks."""
-        pass
-    
-    def resolve_conflicts(self, schedule: DailySchedule) -> DailySchedule:
-        """Resolve conflicts (e.g., overbooked time) in schedule."""
-        pass
